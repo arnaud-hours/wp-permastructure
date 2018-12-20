@@ -314,7 +314,11 @@ if ( !class_exists( 'wp_permastructure' ) ) {
                     if ( strpos( $permalink, '%' . $taxonomy . '%' ) !== false ) {
                         $terms = get_the_terms( $post->ID, $taxonomy );
                         if ( $terms ) {
-                            usort( $terms, '_usort_terms_by_ID' ); // order by ID
+                            if ( function_exists( 'wp_list_sort' ) ) {
+                                wp_list_sort( $terms, 'term_id', 'ASC' );
+                            } else {
+                                usort( $terms, '_usort_terms_by_ID' ); // order by ID
+                            }
                             $term = $terms[ 0 ]->slug;
                             if ( $taxonomy_object->hierarchical && $parent = $terms[ 0 ]->parent ) {
                                 $term = get_term_parents( $parent, $taxonomy, false, '/', true ) . $term;
