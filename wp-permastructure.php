@@ -305,6 +305,9 @@ if ( !class_exists( 'wp_permastructure' ) ) {
 
             if ( '' != $permalink && !in_array( $post->post_status, array( 'draft', 'pending', 'auto-draft' ) ) ) {
                 $unixtime = strtotime( $post->post_date );
+                
+                // choose the right category if one is set as the default in the yoast seo plugin
+                $defaultCategory = get_post_meta($post->ID, '_yoast_wpseo_primary_category', true);
 
                 // add ability to use any taxonomies in post type permastruct
                 $replace_terms = array();
@@ -319,8 +322,20 @@ if ( !class_exists( 'wp_permastructure' ) ) {
                             } else {
                                 usort( $terms, '_usort_terms_by_ID' ); // order by ID
                             }
-                            $term = $terms[ 0 ]->slug;
-                            if ( $taxonomy_object->hierarchical && $parent = $terms[ 0 ]->parent ) {
+
+                            // choose from the default yoast category if found
+                            $idx = 0;
+                            if (!empty($defaultCategory)) {
+                                foreach ($terms as $key => $termTmp) {
+                                    if ($termTmp->term_id == $defaultCategory) {
+                                        $idx = $key;
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            $term = $terms[$idx]->slug;
+                            if ( $taxonomy_object->hierarchical && $parent = $terms[$idx]->parent ) {
                                 $term = get_term_parents( $parent, $taxonomy, false, '/', true ) . $term;
                             }
                         }
